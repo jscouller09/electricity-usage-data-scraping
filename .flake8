@@ -1,0 +1,4 @@
+[flake8]
+# W191: indentation contains tabs
+# E501: line length
+ignore = W191,E501
