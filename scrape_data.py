@@ -32,32 +32,21 @@ flag = 0x08000000  # No-Window flag
 # flag = 0x00000008  # Detached-Process flag, if first doesn't work
 webdriver.common.service.subprocess.Popen = functools.partial(webdriver.common.service.subprocess.Popen, creationflags=flag)
 
-def print_indent(msg, n=1):
-    '''
-    Wrapper to do indented printing
-    '''
-    print('\t'*n, msg)
-
 def error_catcher(func):
     '''
     Error catcher decorator to handle closing down browser properly if an error is encountered
     '''
     def run_and_catch(*args, **kwargs):
         try:
-            error_caused = False
             return func(*args, **kwargs)
         except TimeoutException:
-            error_caused = True
-            print_indent('{} method timed out waiting for an element!'.format(func.__name__))
-            exc_type, exc_value, exc_tb = sys.exc_info()
-            print_indent(exc_value.msg, 2)
-        except Exception:
-            error_caused = True
-            print_indent('{} method caused an unexpected error!'.format(func.__name__))
+            print('{} method timed out waiting for an element!'.format(func.__name__))
             traceback.print_exc()
-        finally:
-            if error_caused:
-                args[0].driver.close()
+        except Exception:
+            print('{} method caused an unexpected error!'.format(func.__name__))
+            traceback.print_exc()
+        # make sure to close web browser instance after error handling if an error is encountered
+        args[0].driver.close()
 
     return run_and_catch
 
@@ -77,6 +66,7 @@ class AutoBrowser(object):
         self.working_dir = os.path.dirname(__file__)
         print('Starting Firefox...')
         self.driver = webdriver.Firefox()
+        self.driver.implicitly_wait(1)
         # hide window off-screen if desired
         # driver.set_window_position(-10000, 0)
         # setup a waiter helper
