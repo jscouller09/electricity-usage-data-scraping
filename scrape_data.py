@@ -21,7 +21,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # custom module imports
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -42,6 +42,9 @@ def error_catcher(func):
         except TimeoutException:
             print('{} method timed out waiting for an element!'.format(func.__name__))
             traceback.print_exc()
+        except NoSuchElementException:
+            print('{} method could not find an element!'.format(func.__name__))
+            traceback.print_exc()
         except Exception:
             print('{} method caused an unexpected error!'.format(func.__name__))
             traceback.print_exc()
@@ -61,7 +64,7 @@ class AutoBrowser(object):
     :raises TimeoutException: Raised when a target element does not appear after the configured timeout
     '''
 
-    def __init__(self, env_filepath=None, timeout=3):
+    def __init__(self, env_filepath=None, timeout=10):
         # working dir
         self.working_dir = os.path.dirname(__file__)
         print('Starting Firefox...')
@@ -79,25 +82,30 @@ class AutoBrowser(object):
         self.login_url = os.getenv('LOGIN_URL', 'https://www.google.com')
         self.data_url = os.getenv('DATA_URL', 'https://www.google.com')
         # assume env file contains login credentials
-        self.username = os.getenv('USERNAME', 'username')
-        self.password = os.getenv('PASSWORD', '1234')
+        self.username = os.getenv('WEB_USERNAME', 'username')
+        self.password = os.getenv('WEB_PASSWORD', '1234')
 
         print('Initialised {}!'.format(self.__class__.__name__))
 
     @error_catcher
-    def login(self):
+    def login(self, continue_btn_id, login_btn_id, username_fld_id, password_fld_id):
         # go to login page and wait for login button to appear
         print('Loading login page...')
         self.driver.get(self.login_url)
-        target_id = 'loginButton'
-        elem_login_btn = self.wait.until(EC.element_to_be_clickable((By.ID, target_id)), 'element with id={} was not clickable within {}s'.format(target_id, self.timeout))
-        elem_username = self.driver.find_element_by_id('userName')
-        elem_password = self.driver.find_element_by_id('userPassword')
-        elem_username.send_keys(self.username)
-        elem_password.send_keys(self.password)
-        elem_login_btn.click()
+        # assume we have a front page that just asks for our username first
+        msg = 'button element with id={} was not clickable within {}s'.format(continue_btn_id, self.timeout)
+        elem_btn_continue = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button#{}'.format(continue_btn_id))), msg)
+        elem_fld_username = self.driver.find_element_by_css_selector('input#{}'.format(username_fld_id))
+        elem_fld_username.send_keys(self.username)
+        elem_btn_continue.click()
+        # now assume we are prompted for a password
+        msg = 'button element with id={} was not clickable within {}s'.format(login_btn_id, self.timeout)
+        elem_btn_login = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button#{}'.format(login_btn_id))), msg)
+        elem_fld_password = self.driver.find_element_by_css_selector('input#{}'.format(password_fld_id))
+        elem_fld_password.send_keys(self.password)
+        elem_btn_login.click()
         print('Logging in...')
 
 
 browser = AutoBrowser()
-browser.login()
+browser.login(continue_btn_id='continue', login_btn_id='next', username_fld_id='email', password_fld_id='password')
