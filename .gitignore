@@ -118,3 +118,6 @@ dmypy.json
 
 # Environment file
 .env
+
+# outputs
+outputs/
