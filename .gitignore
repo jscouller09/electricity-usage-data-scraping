@@ -120,5 +120,6 @@ dmypy.json
 .env
 
 # outputs
-outputs/
 mthly_totals.csv
+outputs/
+
