@@ -74,3 +74,5 @@ mthly_totals = mthly_totals.T
 mthly_totals['avg'] = mthly_totals.mean(axis=1)
 
 mthly_totals.to_csv('mthly_totals.csv')
+daily_totals.to_csv('daily_totals.csv')
+all_data.to_csv('all_data.csv')
