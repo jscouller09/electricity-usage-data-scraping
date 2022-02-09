@@ -22,6 +22,7 @@ working_dir = os.path.dirname(__file__)
 outputs_dir = os.path.join(working_dir, 'outputs')
 
 # get all files and compile into single pandas df
+print('Compiling data...')
 all_data = pd.DataFrame()
 for f in os.listdir(outputs_dir):
     f_path = os.path.join(outputs_dir, f)
@@ -43,7 +44,7 @@ all_data['night'] = all_data['date'].apply(lambda ts: (ts.hour < 7) or (ts.hour 
 all_data['weekend'] = all_data['date'].apply(lambda ts: ts.dayofweek >= 5)
 all_data['off-peak'] = all_data['night'] | all_data['weekend']
 # add rates
-all_data['rate'] = all_data['off-peak'].apply(lambda off_pk: 0.1347 if off_pk else 0.2332)
+all_data['rate'] = all_data['off-peak'].apply(lambda off_pk: 0.1347 if off_pk else 0.3074)
 # convert usage in kWh to number
 all_data['usage_kWh'] = all_data['usage'].apply(lambda s: float(s[:-4]))
 # sort out usage at different times
@@ -73,6 +74,31 @@ mthly_totals = mthly_totals.T
 # add averages
 mthly_totals['avg'] = mthly_totals.mean(axis=1)
 
+# write output CSV
 mthly_totals.to_csv('mthly_totals.csv')
 daily_totals.to_csv('daily_totals.csv')
 all_data.to_csv('all_data.csv')
+print('Wrote compiled data csv files!')
+
+# billing period to check
+bill_start = pd.to_datetime('06/01/2022', dayfirst=True)
+bill_end = pd.to_datetime('06/02/2022', dayfirst=True)
+bill_data = all_data.set_index('date').loc[bill_start:bill_end, cols].sum()
+# add percentages
+bill_data['night_perc'] = 100 * bill_data['night_kWh'] / bill_data['usage_kWh']
+bill_data['weekend_perc'] = 100 * bill_data['weekend_kWh'] / bill_data['usage_kWh']
+bill_data['weekday_perc'] = 100 * bill_data['weekday_kWh'] / bill_data['usage_kWh']
+bill_data['off_peak_perc'] = 100 * (bill_data['night_kWh'] + bill_data['weekend_kWh']) / bill_data['usage_kWh']
+print('Over billing period from {:%d/%m/%y} to {:%d/%m/%y}:'.format(bill_start, bill_end))
+print('\t{:10.2f}% night use'.format(bill_data['night_perc']))
+print('\t{:10.2f}% weekend use'.format(bill_data['weekend_perc']))
+print('\t{:10.2f}% weekday use'.format(bill_data['weekday_perc']))
+print('\t{:10.2f}% off-peak use'.format(bill_data['off_peak_perc']))
+print('\t{:10.2f}  kWh night use'.format(bill_data['night_kWh']))
+print('\t{:10.2f}  kWh weekend use'.format(bill_data['weekend_kWh']))
+print('\t{:10.2f}  kWh weekday use'.format(bill_data['weekday_kWh']))
+print('\t{:10.2f}  kWh off-peak use'.format(bill_data['night_kWh'] + bill_data['weekend_kWh']))
+print('\t{:10.2f}  kWh total use'.format(bill_data['usage_kWh']))
+print('\t{:10.2f}  NZD charge'.format(bill_data['total_charge']))
+
+print('DONE!')
