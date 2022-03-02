@@ -12,7 +12,7 @@ import functools
 import traceback
 import pandas as pd
 from datetime import datetime
-from environs import Env
+from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -87,7 +87,7 @@ class AutoBrowser(object):
         self.wait = WebDriverWait(self.driver, self.timeout)
         # get data from env file
         env_filepath = env_filepath if env_filepath else os.path.join(self.working_dir, '.env')
-        Env().read_env(env_filepath)
+        load_dotenv(env_filepath)
         # assume env file contains a login url
         self.login_url = os.getenv('LOGIN_URL', 'https://www.google.com')
         # assume env file contains login credentials
