@@ -35,6 +35,9 @@ for f in os.listdir(outputs_dir):
 
 # sort by date
 all_data.sort_values('date', inplace=True)
+start_ts = all_data.date.iloc[0]
+end_ts = all_data.date.iloc[-1]
+ts_index = pd.date_range(start=start_ts, end=end_ts, freq='H', name='timestamp')
 # add date parts
 all_data['day'] = all_data['date'].apply(lambda ts: ts.day)
 all_data['month'] = all_data['date'].apply(lambda ts: ts.month)
@@ -58,6 +61,9 @@ all_data.loc[~all_data['off-peak'], 'weekday_kWh'] = all_data['usage_kWh'].loc[~
 all_data['usage_charge'] = all_data['rate'] * all_data['usage_kWh']
 all_data['daily_charge'] = 0.3450 / 24
 all_data['total_charge'] = all_data['usage_charge'] + all_data['daily_charge']
+# add ts index and check for gaps
+all_data = pd.DataFrame(index=ts_index).join(all_data.set_index('date'))
+missing = all_data.loc[all_data.isna().all(axis=1)]
 # calc total by day and month
 index = ['year', 'month', 'day']
 cols = ['usage_kWh', 'usage_charge', 'daily_charge', 'total_charge', 'weekend_kWh', 'night_kWh', 'weekday_kWh']
@@ -80,16 +86,23 @@ daily_totals.to_csv('daily_totals.csv')
 all_data.to_csv('all_data.csv')
 print('Wrote compiled data csv files!')
 
+print('Missing data for the following timestamps:')
+for ts, data in missing.iterrows():
+    print('\t{:%Y-%m-%d %H:%M}'.format(ts))
+
 # billing period to check
-bill_start = pd.to_datetime('06/01/2022', dayfirst=True)
-bill_end = pd.to_datetime('06/02/2022', dayfirst=True)
-bill_data = all_data.set_index('date').loc[bill_start:bill_end, cols].sum()
+bill_start = pd.to_datetime('07/02/2022', dayfirst=True)
+bill_end = pd.to_datetime('07/03/2022', dayfirst=True)
+bill_ts = all_data.loc[bill_start:bill_end].index
+bill_days = bill_ts[-1] - bill_ts[0] + pd.Timedelta(hours=1)
+bill_data = all_data.loc[bill_start:bill_end, cols].sum()
 # add percentages
 bill_data['night_perc'] = 100 * bill_data['night_kWh'] / bill_data['usage_kWh']
 bill_data['weekend_perc'] = 100 * bill_data['weekend_kWh'] / bill_data['usage_kWh']
 bill_data['weekday_perc'] = 100 * bill_data['weekday_kWh'] / bill_data['usage_kWh']
 bill_data['off_peak_perc'] = 100 * (bill_data['night_kWh'] + bill_data['weekend_kWh']) / bill_data['usage_kWh']
 print('Over billing period from {:%d/%m/%y} to {:%d/%m/%y}:'.format(bill_start, bill_end))
+print('\t{:10d}  days'.format(bill_days.days))
 print('\t{:10.2f}% night use'.format(bill_data['night_perc']))
 print('\t{:10.2f}% weekend use'.format(bill_data['weekend_perc']))
 print('\t{:10.2f}% weekday use'.format(bill_data['weekday_perc']))
