@@ -71,7 +71,6 @@ class AutoBrowser(object):
         options.set_preference('browser.download.folderList', 2)
         options.set_preference('browser.download.manager.showWhenStarting', False)
         options.set_preference('browser.download.dir', self.outputs_dir)
-        options.set_preference('browser.download.manager.useDownloadDir', True)
         options.set_preference('browser.download.useDownloadDir', True)
         options.set_preference('browser.download.manager.useWindow', False)
         options.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/plain')
