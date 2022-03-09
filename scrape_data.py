@@ -13,21 +13,18 @@ import traceback
 import pandas as pd
 from datetime import datetime
 from dotenv import load_dotenv
-from selenium import webdriver
+from selenium.webdriver import Firefox
+from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # custom module imports
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # main code
 
-# make sure geoDriver starts hidden
-flag = 0x08000000  # No-Window flag
-# flag = 0x00000008  # Detached-Process flag, if first doesn't work
-webdriver.common.service.subprocess.Popen = functools.partial(webdriver.common.service.subprocess.Popen, creationflags=flag)
 
 def error_catcher(func):
     '''
@@ -70,15 +67,18 @@ class AutoBrowser(object):
         if not os.path.exists(self.outputs_dir):
             os.makedirs(self.outputs_dir)
         # setup downloads location
-        profile = webdriver.FirefoxProfile()
-        profile.set_preference('browser.download.folderList', 2)
-        profile.set_preference('browser.download.manager.showWhenStarting', False)
-        profile.set_preference('browser.download.dir', self.outputs_dir)
-        profile.set_preference('browser.download.manager.useDownloadDir', True)
-        profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/plain')
+        options = Options()
+        options.set_preference('browser.download.folderList', 2)
+        options.set_preference('browser.download.manager.showWhenStarting', False)
+        options.set_preference('browser.download.dir', self.outputs_dir)
+        options.set_preference('browser.download.manager.useDownloadDir', True)
+        options.set_preference('browser.download.useDownloadDir', True)
+        options.set_preference('browser.download.manager.useWindow', False)
+        options.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/plain')
+        service = Service(os.path.join(self.working_dir, 'geckodriver.exe'))
         # start browser
         print('Starting Firefox...')
-        self.driver = webdriver.Firefox(firefox_profile=profile, executable_path=os.path.join(self.working_dir, 'geckodriver'))
+        self.driver = Firefox(service=service, options=options)
         self.driver.implicitly_wait(1)
         # hide window off-screen if desired
         # driver.set_window_position(-10000, 0)
@@ -104,7 +104,7 @@ class AutoBrowser(object):
         # assume we have a front page that just asks for our username first
         msg = 'button element with id={} was not clickable within {}s'.format(continue_btn_id, self.timeout)
         elem_btn_continue = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button#{}'.format(continue_btn_id))), msg)
-        elem_fld_username = self.driver.find_element_by_css_selector('input#{}'.format(username_fld_id))
+        elem_fld_username = self.driver.find_element(by=By.CSS_SELECTOR, value='input#{}'.format(username_fld_id))
         elem_fld_username.send_keys(self.username)
         elem_btn_continue.click()
         print('Clicked button {}'.format(elem_btn_continue.text))
@@ -115,7 +115,7 @@ class AutoBrowser(object):
         # now assume we are prompted for a password
         msg = 'button element with id={} was not clickable within {}s'.format(login_btn_id, self.timeout)
         elem_btn_login = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button#{}'.format(login_btn_id))), msg)
-        elem_fld_password = self.driver.find_element_by_css_selector('input#{}'.format(password_fld_id))
+        elem_fld_password = self.driver.find_element(by=By.CSS_SELECTOR, value='input#{}'.format(password_fld_id))
         elem_fld_password.send_keys(self.password)
         elem_btn_login.click()
         print('Clicked button {}'.format(elem_btn_login.text))
@@ -158,7 +158,7 @@ class AutoBrowser(object):
         data_found = False
         while not data_found:
             try:
-                self.driver.find_element_by_css_selector(no_data_css)
+                self.driver.find_element(by=By.CSS_SELECTOR, value=no_data_css)
                 # click the back button to get data from previous day
                 self.click_button(previous_btn_css)
             except NoSuchElementException:
@@ -191,10 +191,10 @@ browser.click_button('a.Header-Link--Usage-Link')
 # click the 3rd match for the button class, which is the hourly data button
 browser.click_button('button.electricity-historical-tabs', i=2)
 # extract data
-stop_date = pd.to_datetime('2022-02-08')
+stop_date = pd.to_datetime('2022-03-01')
 cur_date = datetime.now()
 while cur_date > stop_date:
     cur_date = browser.extract_data(toggle_btn_css='button.toggle', previous_btn_css='button.previous', no_data_css='div.error-text', data_css='div.chart-container.HOURLY.electricity-chart', download_btn_css='button.download-usage-excel')
 
 # finish
-browser.driver.close()
+browser.driver.quit()
