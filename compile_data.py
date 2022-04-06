@@ -102,7 +102,7 @@ bill_data['weekend_perc'] = 100 * bill_data['weekend_kWh'] / bill_data['usage_kW
 bill_data['weekday_perc'] = 100 * bill_data['weekday_kWh'] / bill_data['usage_kWh']
 bill_data['off_peak_perc'] = 100 * (bill_data['night_kWh'] + bill_data['weekend_kWh']) / bill_data['usage_kWh']
 print('Over billing period from {:%d/%m/%y} to {:%d/%m/%y}:'.format(bill_start, bill_end))
-print('\t{:10d}  days'.format(bill_days.days))
+print('\t{:8d}/{:2d} days complete'.format(bill_days.days, (bill_end - bill_start).days + 1))
 print('\t{:10.2f}% night use'.format(bill_data['night_perc']))
 print('\t{:10.2f}% weekend use'.format(bill_data['weekend_perc']))
 print('\t{:10.2f}% weekday use'.format(bill_data['weekday_perc']))
