@@ -190,7 +190,7 @@ browser.click_button('a.Header-Link--Usage-Link')
 # click the 3rd match for the button class, which is the hourly data button
 browser.click_button('button.electricity-historical-tabs', i=2)
 # extract data
-stop_date = pd.to_datetime('2022-03-08')
+stop_date = pd.to_datetime('2022-04-04')
 cur_date = datetime.now()
 while cur_date > stop_date:
     cur_date = browser.extract_data(toggle_btn_css='button.toggle', previous_btn_css='button.previous', no_data_css='div.error-text', data_css='div.chart-container.HOURLY.electricity-chart', download_btn_css='button.download-usage-excel')

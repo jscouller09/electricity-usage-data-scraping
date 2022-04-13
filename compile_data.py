@@ -91,8 +91,8 @@ for ts, data in missing.iterrows():
     print('\t{:%Y-%m-%d %H:%M}'.format(ts))
 
 # billing period to check
-bill_start = pd.to_datetime('08/03/2022', dayfirst=True)
-bill_end = pd.to_datetime('05/04/2022', dayfirst=True)
+bill_start = pd.to_datetime('06/04/2022', dayfirst=True)
+bill_end = pd.to_datetime('09/05/2022', dayfirst=True)
 bill_ts = all_data.loc[bill_start:bill_end].index
 bill_days = bill_ts[-1] - bill_ts[0] + pd.Timedelta(hours=1)
 bill_data = all_data.loc[bill_start:bill_end, cols].sum()
