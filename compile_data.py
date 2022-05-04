@@ -42,6 +42,7 @@ ts_index = pd.date_range(start=start_ts, end=end_ts, freq='H', name='timestamp')
 all_data['day'] = all_data['date'].apply(lambda ts: ts.day)
 all_data['month'] = all_data['date'].apply(lambda ts: ts.month)
 all_data['year'] = all_data['date'].apply(lambda ts: ts.year)
+all_data['day_of_year'] = all_data['date'].apply(lambda ts: ts.dayofyear)
 # add column for night 9pm-7am/weekend times
 all_data['night'] = all_data['date'].apply(lambda ts: (ts.hour < 7) or (ts.hour >= 21))
 all_data['weekend'] = all_data['date'].apply(lambda ts: ts.dayofweek >= 5)
@@ -59,11 +60,14 @@ all_data['weekday_kWh'] = 0.0
 all_data.loc[~all_data['off-peak'], 'weekday_kWh'] = all_data['usage_kWh'].loc[~all_data['off-peak']]
 # calc charges per day and per kWh
 all_data['usage_charge'] = all_data['rate'] * all_data['usage_kWh']
-all_data['daily_charge'] = 0.3450 / 24
+#all_data['daily_charge'] = 0.3450 / 24
+# calculate daily charge based on number of timesteps - should be 24, but during daylight savings switchover can be 23 or 25
+all_data['daily_charge'] = all_data['day_of_year'].apply(lambda doy: 0.3450 / (all_data['day_of_year'] == doy).sum())
 all_data['total_charge'] = all_data['usage_charge'] + all_data['daily_charge']
 # add ts index and check for gaps
 all_data = pd.DataFrame(index=ts_index).join(all_data.set_index('date'))
 missing = all_data.loc[all_data.isna().all(axis=1)]
+dups = all_data.loc[all_data.index.duplicated('first') | all_data.index.duplicated('last')]
 # calc total by day and month
 index = ['year', 'month', 'day']
 cols = ['usage_kWh', 'usage_charge', 'daily_charge', 'total_charge', 'weekend_kWh', 'night_kWh', 'weekday_kWh']
@@ -89,6 +93,10 @@ print('Wrote compiled data csv files!')
 print('Missing data for the following timestamps:')
 for ts, data in missing.iterrows():
     print('\t{:%Y-%m-%d %H:%M}'.format(ts))
+
+print('Duplicated data for the following timestamps:')
+for ts, data in dups.iterrows():
+    print('\t{:%Y-%m-%d %H:%M} | {}'.format(ts, data.usage))
 
 # billing period to check
 bill_start = pd.to_datetime('06/04/2022', dayfirst=True)
