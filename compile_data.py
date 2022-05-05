@@ -103,14 +103,19 @@ bill_start = pd.to_datetime('06/04/2022', dayfirst=True)
 bill_end = pd.to_datetime('09/05/2022', dayfirst=True)
 bill_ts = all_data.loc[bill_start:bill_end].index
 bill_days = bill_ts[-1] - bill_ts[0] + pd.Timedelta(hours=1)
+days_bill_period = (bill_end - bill_start).days + 1
+days_current = bill_days.days
+days_remaining_bill_period = days_bill_period - days_current
 bill_data = all_data.loc[bill_start:bill_end, cols].sum()
+avg_daily_charge = all_data.loc[bill_start:bill_end, ['day_of_year','total_charge']].groupby('day_of_year').sum().mean()[0]
 # add percentages
 bill_data['night_perc'] = 100 * bill_data['night_kWh'] / bill_data['usage_kWh']
 bill_data['weekend_perc'] = 100 * bill_data['weekend_kWh'] / bill_data['usage_kWh']
 bill_data['weekday_perc'] = 100 * bill_data['weekday_kWh'] / bill_data['usage_kWh']
 bill_data['off_peak_perc'] = 100 * (bill_data['night_kWh'] + bill_data['weekend_kWh']) / bill_data['usage_kWh']
 print('Over billing period from {:%d/%m/%y} to {:%d/%m/%y}:'.format(bill_start, bill_end))
-print('\t{:8d}/{:2d} days complete'.format(bill_days.days, (bill_end - bill_start).days + 1))
+print('\t{:8d}/{:2d} days complete'.format(days_current, days_bill_period))
+print('\t{:11d} days remaining'.format(days_remaining_bill_period))
 print('\t{:10.2f}% night use'.format(bill_data['night_perc']))
 print('\t{:10.2f}% weekend use'.format(bill_data['weekend_perc']))
 print('\t{:10.2f}% weekday use'.format(bill_data['weekday_perc']))
@@ -120,6 +125,8 @@ print('\t{:10.2f}  kWh weekend use'.format(bill_data['weekend_kWh']))
 print('\t{:10.2f}  kWh weekday use'.format(bill_data['weekday_kWh']))
 print('\t{:10.2f}  kWh off-peak use'.format(bill_data['night_kWh'] + bill_data['weekend_kWh']))
 print('\t{:10.2f}  kWh total use'.format(bill_data['usage_kWh']))
-print('\t{:10.2f}  NZD charge'.format(bill_data['total_charge']))
+print('\t{:10.2f}  NZD charged'.format(bill_data['total_charge']))
+print('\t{:10.2f}  NZD average daily charge over bill period'.format(avg_daily_charge))
+print('\t{:10.2f}  NZD estimated total bill'.format(avg_daily_charge*days_remaining_bill_period + bill_data['total_charge']))
 
 print('DONE!')
