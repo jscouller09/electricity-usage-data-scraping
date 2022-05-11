@@ -98,12 +98,12 @@ print('Duplicated data for the following timestamps:')
 for ts, data in dups.iterrows():
     print('\t{:%Y-%m-%d %H:%M} | {}'.format(ts, data.usage))
 
-# billing period to check
-bill_start = pd.to_datetime('06/04/2022', dayfirst=True)
-bill_end = pd.to_datetime('09/05/2022', dayfirst=True)
+# billing period to check - note billing period will end at the end of the day on the last day
+bill_start = pd.to_datetime('10/05/2022', dayfirst=True)
+bill_end = pd.to_datetime('08/06/2022', dayfirst=True) + pd.Timedelta(hours=24)
 bill_ts = all_data.loc[bill_start:bill_end].index
-bill_days = bill_ts[-1] - bill_ts[0] + pd.Timedelta(hours=1)
-days_bill_period = (bill_end - bill_start).days + 1
+bill_days = bill_ts[-1] - bill_ts[0]
+days_bill_period = (bill_end - bill_start).days
 days_current = bill_days.days
 days_remaining_bill_period = days_bill_period - days_current
 bill_data = all_data.loc[bill_start:bill_end, cols].sum()
