@@ -102,7 +102,7 @@ for ts, data in dups.iterrows():
 bill_start = pd.to_datetime('09/06/2022', dayfirst=True)
 bill_end = pd.to_datetime('10/07/2022', dayfirst=True) + pd.Timedelta(hours=24)
 bill_ts = all_data.loc[bill_start:bill_end].index
-bill_days = bill_ts[-1] - bill_ts[0]
+bill_days = bill_ts[-1] - bill_ts[0] + pd.Timedelta(hours=1) # timeseries ends at 23:00 on each day
 days_bill_period = (bill_end - bill_start).days
 days_current = bill_days.days
 days_remaining_bill_period = days_bill_period - days_current
