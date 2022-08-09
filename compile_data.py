@@ -99,8 +99,8 @@ for ts, data in dups.iterrows():
     print('\t{:%Y-%m-%d %H:%M} | {}'.format(ts, data.usage))
 
 # billing period to check - note billing period will end at the end of the day on the last day
-bill_start = pd.to_datetime('09/06/2022', dayfirst=True)
-bill_end = pd.to_datetime('10/07/2022', dayfirst=True) + pd.Timedelta(hours=24)
+bill_start = pd.to_datetime('11/07/2022', dayfirst=True)
+bill_end = pd.to_datetime('08/08/2022', dayfirst=True) + pd.Timedelta(hours=24)
 bill_ts = all_data.loc[bill_start:bill_end].index
 bill_days = bill_ts[-1] - bill_ts[0]
 if bill_days.components.hours == 23:
