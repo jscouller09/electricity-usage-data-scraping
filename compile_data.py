@@ -60,9 +60,10 @@ all_data['weekday_kWh'] = 0.0
 all_data.loc[~all_data['off-peak'], 'weekday_kWh'] = all_data['usage_kWh'].loc[~all_data['off-peak']]
 # calc charges per day and per kWh
 all_data['usage_charge'] = all_data['rate'] * all_data['usage_kWh']
-#all_data['daily_charge'] = 0.3450 / 24
-# calculate daily charge based on number of timesteps - should be 24, but during daylight savings switchover can be 23 or 25
-all_data['daily_charge'] = all_data['day_of_year'].apply(lambda doy: 0.3450 / (all_data['day_of_year'] == doy).sum())
+# calculate daily charge based on number of hourly timesteps associated with each day - should be 24, but during daylight savings switchover can be 23 or 25
+for i, row in all_data.iterrows():
+    num_hrs = all_data.loc[(all_data['day_of_year'] == row['day_of_year']) & (all_data['year'] == row['year'])].shape[0]
+    all_data['daily_charge'] = 0.3450 / num_hrs
 all_data['total_charge'] = all_data['usage_charge'] + all_data['daily_charge']
 # add ts index and check for gaps
 all_data = pd.DataFrame(index=ts_index).join(all_data.set_index('date'))
@@ -99,18 +100,18 @@ for ts, data in dups.iterrows():
     print('\t{:%Y-%m-%d %H:%M} | {}'.format(ts, data.usage))
 
 # billing period to check - note billing period will end at the end of the day on the last day
-bill_start = pd.to_datetime('11/07/2022', dayfirst=True)
-bill_end = pd.to_datetime('08/08/2022', dayfirst=True) + pd.Timedelta(hours=24)
+bill_start = pd.to_datetime('07/09/2022', dayfirst=True) + pd.Timedelta(hours=1) # total for first hour of the billing period is at 1am
+bill_end = pd.to_datetime('05/10/2022', dayfirst=True) + pd.Timedelta(hours=24) # total for last hour of the billing period is at midnight on the day after
 bill_ts = all_data.loc[bill_start:bill_end].index
 bill_days = bill_ts[-1] - bill_ts[0]
 if bill_days.components.hours == 23:
     # timeseries ends at 23:00 because no subsequent data available
     bill_days += pd.Timedelta(hours=1)
-days_bill_period = (bill_end - bill_start).days
+days_bill_period = (bill_end - bill_start + pd.Timedelta(hours=1)).days # add hour because of starting with 1am on first billing day
 days_current = bill_days.days
 days_remaining_bill_period = days_bill_period - days_current
 bill_data = all_data.loc[bill_start:bill_end, cols].sum()
-avg_daily_charge = all_data.loc[bill_start:bill_end, ['day_of_year','total_charge']].groupby('day_of_year').sum().mean()[0]
+avg_daily_charge = all_data.loc[bill_start:bill_end, ['day_of_year', 'total_charge']].groupby('day_of_year').sum().mean()[0]
 # add percentages
 bill_data['night_perc'] = 100 * bill_data['night_kWh'] / bill_data['usage_kWh']
 bill_data['weekend_perc'] = 100 * bill_data['weekend_kWh'] / bill_data['usage_kWh']
