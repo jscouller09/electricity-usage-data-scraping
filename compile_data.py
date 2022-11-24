@@ -100,8 +100,8 @@ for ts, data in dups.iterrows():
     print('\t{:%Y-%m-%d %H:%M} | {}'.format(ts, data.usage))
 
 # billing period to check - note billing period will end at the end of the day on the last day
-bill_start = pd.to_datetime('06/10/2022', dayfirst=True) + pd.Timedelta(hours=1) # total for first hour of the billing period is at 1am
-bill_end = pd.to_datetime('06/11/2022', dayfirst=True) + pd.Timedelta(hours=24) # total for last hour of the billing period is at midnight on the day after
+bill_start = pd.to_datetime('07/11/2022', dayfirst=True) + pd.Timedelta(hours=1) # total for first hour of the billing period is at 1am
+bill_end = pd.to_datetime('05/12/2022', dayfirst=True) + pd.Timedelta(hours=24) # total for last hour of the billing period is at midnight on the day after
 bill_ts = all_data.loc[bill_start:bill_end].index
 bill_days = bill_ts[-1] - bill_ts[0]
 if bill_days.components.hours == 23:
@@ -117,7 +117,7 @@ bill_data['night_perc'] = 100 * bill_data['night_kWh'] / bill_data['usage_kWh']
 bill_data['weekend_perc'] = 100 * bill_data['weekend_kWh'] / bill_data['usage_kWh']
 bill_data['weekday_perc'] = 100 * bill_data['weekday_kWh'] / bill_data['usage_kWh']
 bill_data['off_peak_perc'] = 100 * (bill_data['night_kWh'] + bill_data['weekend_kWh']) / bill_data['usage_kWh']
-print('Over billing period from {:%d/%m/%y} to {:%d/%m/%y}:'.format(bill_start, bill_end))
+print('Over billing period from {:%d/%m/%y %H:%M} to {:%d/%m/%y %H:%M}:'.format(bill_start, bill_end))
 print('\t{:8d}/{:2d} days complete'.format(days_current, days_bill_period))
 print('\t{:11d} days remaining'.format(days_remaining_bill_period))
 print('\t{:10.2f}% night use'.format(bill_data['night_perc']))
