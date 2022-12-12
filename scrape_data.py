@@ -144,8 +144,9 @@ class AutoBrowser(object):
             # expecting multiple matches - wait till all visible then select particular one
             elem_btns = self.wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, data_btn_css)), msg)
             elem_btn_data = elem_btns[i]
+        btn_name = elem_btn_data.text
         elem_btn_data.click()
-        print('Clicked button {}'.format(elem_btn_data.text))
+        print('Clicked button {}'.format(btn_name))
 
     @error_catcher
     def extract_data(self, toggle_btn_css, previous_btn_css, no_data_css, data_css, download_btn_css):
@@ -184,18 +185,18 @@ class AutoBrowser(object):
 # initialise browser
 browser = AutoBrowser()
 # do login
-browser.login(continue_btn_id='continue', login_btn_id='next', username_fld_id='email', password_fld_id='password', load_invisible_id='loader', success_visible_cls='dashboard-welcome-title', success_invisible_cls='wave-portal')
+browser.login(continue_btn_id='continue', login_btn_id='next', username_fld_id='email', password_fld_id='password', load_invisible_id='loader', success_visible_cls='account-owner', success_invisible_cls='loading-portal')
 # navigate to usage page
-# browser.click_button('a.Header-Link--Usage-Link')
-#browser.click_button('a.Header-Link--Usage-Link', hiding_elem_css='loading-portal')
-new_url = browser.driver.current_url.replace('dashboard', 'usage')
 print('Navigating to usage page...')
-browser.driver.get(new_url)
+# browser.click_button('a.Header-Link--Usage-Link')
+browser.click_button('a[href="/account/products/consumption"]', hiding_elem_css='loading-portal')
+# new_url = browser.driver.current_url.replace(r'/account/dashboard', r'/account/products/consumption')
+# browser.driver.get(new_url)
 # click the 3rd match for the button class, which is the hourly data button
 # browser.click_button('button.electricity-historical-tabs', i=2)
 browser.click_button('button.electricity-historical-tabs', hiding_elem_css='loading-portal', i=2)
 # extract data
-stop_date = pd.to_datetime('2022-11-23')
+stop_date = pd.to_datetime('2022-12-10')
 cur_date = datetime.now()
 while cur_date > stop_date:
     cur_date = browser.extract_data(toggle_btn_css='button.toggle', previous_btn_css='button.previous', no_data_css='div.error-text', data_css='div.chart-container.HOURLY.electricity-chart', download_btn_css='button.download-usage-excel')
