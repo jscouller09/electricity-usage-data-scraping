@@ -15,6 +15,13 @@ from datetime import datetime
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # main code
 
+# daily_chg = (60 / 100) * 1.15
+# off_peak_chg = (16.50 / 100) * 1.15
+# peak_chg = (27.10 / 100) * 1.15
+
+daily_chg = (30 / 100) * 1.15
+off_peak_chg = (11.71 / 100) * 1.15
+peak_chg = (26.73 / 100) * 1.15
 
 # working dir
 working_dir = os.path.dirname(__file__)
@@ -48,7 +55,7 @@ all_data['night'] = all_data['date'].apply(lambda ts: (ts.hour < 7) or (ts.hour 
 all_data['weekend'] = all_data['date'].apply(lambda ts: ts.dayofweek >= 5)
 all_data['off-peak'] = all_data['night'] | all_data['weekend']
 # add rates
-all_data['rate'] = all_data['off-peak'].apply(lambda off_pk: 0.1347 if off_pk else 0.3074)
+all_data['rate'] = all_data['off-peak'].apply(lambda off_pk: off_peak_chg if off_pk else peak_chg)
 # convert usage in kWh to number
 all_data['usage_kWh'] = all_data['usage'].apply(lambda s: float(s[:-4]))
 # sort out usage at different times
@@ -63,7 +70,7 @@ all_data['usage_charge'] = all_data['rate'] * all_data['usage_kWh']
 # calculate daily charge based on number of hourly timesteps associated with each day - should be 24, but during daylight savings switchover can be 23 or 25
 for i, row in all_data.iterrows():
     num_hrs = all_data.loc[(all_data['day_of_year'] == row['day_of_year']) & (all_data['year'] == row['year'])].shape[0]
-    all_data['daily_charge'] = 0.3450 / num_hrs
+    all_data['daily_charge'] = daily_chg / num_hrs
 all_data['total_charge'] = all_data['usage_charge'] + all_data['daily_charge']
 # add ts index and check for gaps
 all_data = pd.DataFrame(index=ts_index).join(all_data.set_index('date'))
