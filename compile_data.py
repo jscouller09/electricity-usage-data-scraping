@@ -16,9 +16,9 @@ from datetime import datetime
 # main code
 
 # genesis fixed 1 year energy plus contract rates
-daily_chg = (30 / 100) * 1.15
-off_peak_chg = (14 / 100) * 1.15
-peak_chg = (32 / 100) * 1.15
+daily_chg = (60 / 100) * 1.15
+off_peak_chg = (12.85 / 100) * 1.15
+peak_chg = (30.51 / 100) * 1.15
 
 # genesis fixed 1 year basic contract rates
 # daily_chg = (30 / 100) * 1.15
