@@ -59,7 +59,7 @@ class AutoBrowser(object):
     :raises TimeoutException: Raised when a target element does not appear after the configured timeout
     '''
 
-    def __init__(self, env_filepath=None, timeout=30):
+    def __init__(self, env_filepath=None, timeout=10):
         # working dir
         self.working_dir = os.path.dirname(__file__)
         # outputs dir
@@ -99,6 +99,7 @@ class AutoBrowser(object):
     def login(self, continue_btn_id, login_btn_id, username_fld_id, password_fld_id, load_invisible_id=None, success_visible_cls=None, success_invisible_cls=None):
         # go to login page and wait for login button to appear
         print('Loading login page...')
+        self.driver.implicitly_wait(1)
         self.driver.get(self.login_url)
         # assume we have a front page that just asks for our username first
         msg = 'button element with id={} was not clickable within {}s'.format(continue_btn_id, self.timeout)
@@ -185,16 +186,15 @@ class AutoBrowser(object):
 # initialise browser
 browser = AutoBrowser()
 # do login
-browser.login(continue_btn_id='continue', login_btn_id='next', username_fld_id='email', password_fld_id='password', load_invisible_id='loader', success_visible_cls='account-owner', success_invisible_cls='loading-portal')
+browser.login(continue_btn_id='continue', login_btn_id='next', username_fld_id='email', password_fld_id='password', load_invisible_id='loader', success_visible_cls='account-switcher-button-name', success_invisible_cls='loading-portal')
 # navigate to usage page
 print('Navigating to usage page...')
-# browser.click_button('a.Header-Link--Usage-Link')
+browser.click_button('div.header-tabs-top-link', hiding_elem_css='loading-portal', i=0)
 browser.click_button('a[href="/account/products/consumption"]', hiding_elem_css='loading-portal')
-# new_url = browser.driver.current_url.replace(r'/account/dashboard', r'/account/products/consumption')
-# browser.driver.get(new_url)
+
 # click the 3rd match for the button class, which is the hourly data button
 # browser.click_button('button.electricity-historical-tabs', i=2)
-browser.click_button('button.electricity-historical-tabs', hiding_elem_css='loading-portal', i=2)
+# browser.click_button('button.electricity-historical-tabs', hiding_elem_css='loading-portal', i=2)
 # extract data
 stop_date = pd.to_datetime('2023-01-21')
 cur_date = datetime.now()
