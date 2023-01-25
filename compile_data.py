@@ -16,9 +16,9 @@ from datetime import datetime
 # main code
 
 # genesis fixed 1 year energy plus contract rates
-daily_chg = (60 / 100) * 1.15
-off_peak_chg = (12.85 / 100) * 1.15
-peak_chg = (30.51 / 100) * 1.15
+# daily_chg = (60 / 100) * 1.15
+# off_peak_chg = (12.85 / 100) * 1.15
+# peak_chg = (30.51 / 100) * 1.15
 
 # genesis fixed 1 year basic contract rates
 # daily_chg = (30 / 100) * 1.15
@@ -31,9 +31,9 @@ peak_chg = (30.51 / 100) * 1.15
 # peak_chg = (27.10 / 100) * 1.15
 
 # current Frank rates
-# daily_chg = (30 / 100) * 1.15
-# off_peak_chg = (11.71 / 100) * 1.15
-# peak_chg = (26.73 / 100) * 1.15
+daily_chg = (30 / 100) * 1.15
+off_peak_chg = (11.71 / 100) * 1.15
+peak_chg = (26.73 / 100) * 1.15
 
 # working dir
 working_dir = os.path.dirname(__file__)
@@ -120,7 +120,7 @@ for ts, data in dups.iterrows():
 
 # billing period to check - note billing period will end at the end of the day on the last day
 bill_start = pd.to_datetime('10/01/2023', dayfirst=True) + pd.Timedelta(hours=1) # total for first hour of the billing period is at 1am
-bill_end = pd.to_datetime('08/02/2023', dayfirst=True) + pd.Timedelta(hours=24) # total for last hour of the billing period is at midnight on the day after
+bill_end = pd.to_datetime('19/01/2023', dayfirst=True) + pd.Timedelta(hours=24) # total for last hour of the billing period is at midnight on the day after
 bill_ts = all_data.loc[bill_start:bill_end].index
 bill_days = bill_ts[-1] - bill_ts[0]
 if bill_days.components.hours == 23:
