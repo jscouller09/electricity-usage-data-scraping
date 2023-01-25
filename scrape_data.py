@@ -191,12 +191,10 @@ browser.login(continue_btn_id='continue', login_btn_id='next', username_fld_id='
 print('Navigating to usage page...')
 browser.click_button('div.header-tabs-top-link', hiding_elem_css='loading-portal', i=0)
 browser.click_button('a[href="/account/products/consumption"]', hiding_elem_css='loading-portal')
-
 # click the 3rd match for the button class, which is the hourly data button
-# browser.click_button('button.electricity-historical-tabs', i=2)
-# browser.click_button('button.electricity-historical-tabs', hiding_elem_css='loading-portal', i=2)
+browser.click_button('button.electricity-historical-tabs', hiding_elem_css='loading-portal', i=2)
 # extract data
-stop_date = pd.to_datetime('2023-01-21')
+stop_date = pd.to_datetime('2023-01-22')
 cur_date = datetime.now()
 while cur_date > stop_date:
     cur_date = browser.extract_data(toggle_btn_css='button.toggle', previous_btn_css='button.previous', no_data_css='div.error-text', data_css='div.chart-container.HOURLY.electricity-chart', download_btn_css='button.download-usage-excel')
