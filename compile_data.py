@@ -120,7 +120,7 @@ for ts, data in dups.iterrows():
 
 # billing period to check - note billing period will end at the end of the day on the last day
 bill_start = pd.to_datetime('20/01/2023', dayfirst=True) + pd.Timedelta(hours=1) # total for first hour of the billing period is at 1am
-bill_end = pd.to_datetime('19/02/2023', dayfirst=True) + pd.Timedelta(hours=24) # total for last hour of the billing period is at midnight on the day after
+bill_end = pd.to_datetime('18/02/2023', dayfirst=True) + pd.Timedelta(hours=24) # total for last hour of the billing period is at midnight on the day after
 bill_ts = all_data.loc[bill_start:bill_end].index
 bill_days = bill_ts[-1] - bill_ts[0]
 if bill_days.components.hours == 23:
