@@ -19,6 +19,7 @@ from datetime import datetime
 daily_chg = (60 / 100) * 1.15
 off_peak_chg = (12.85 / 100) * 1.15
 peak_chg = (30.51 / 100) * 1.15
+discount = 0.14
 
 # genesis fixed 1 year basic contract rates
 # daily_chg = (30 / 100) * 1.15
@@ -119,8 +120,8 @@ for ts, data in dups.iterrows():
     print('\t{:%Y-%m-%d %H:%M} | {}'.format(ts, data.usage))
 
 # billing period to check - note billing period will end at the end of the day on the last day
-bill_start = pd.to_datetime('20/01/2023', dayfirst=True) + pd.Timedelta(hours=1) # total for first hour of the billing period is at 1am
-bill_end = pd.to_datetime('18/02/2023', dayfirst=True) + pd.Timedelta(hours=24) # total for last hour of the billing period is at midnight on the day after
+bill_start = pd.to_datetime('20/02/2023', dayfirst=True) + pd.Timedelta(hours=1) # total for first hour of the billing period is at 1am
+bill_end = pd.to_datetime('20/03/2023', dayfirst=True) + pd.Timedelta(hours=24) # total for last hour of the billing period is at midnight on the day after
 bill_ts = all_data.loc[bill_start:bill_end].index
 bill_days = bill_ts[-1] - bill_ts[0]
 if bill_days.components.hours == 23:
@@ -150,6 +151,7 @@ print('\t{:10.2f}  kWh off-peak use'.format(bill_data['night_kWh'] + bill_data['
 print('\t{:10.2f}  kWh total use'.format(bill_data['usage_kWh']))
 print('\t{:10.2f}  NZD charged'.format(bill_data['total_charge']))
 print('\t{:10.2f}  NZD average daily charge over bill period'.format(avg_daily_charge))
-print('\t{:10.2f}  NZD estimated total bill'.format(avg_daily_charge*days_remaining_bill_period + bill_data['total_charge']))
+print('\t{:10.2f}  NZD total charges'.format(avg_daily_charge*days_remaining_bill_period + bill_data['total_charge']))
+print('\t{:10.2f}  NZD estimated bill (discounted)'.format((avg_daily_charge*days_remaining_bill_period + bill_data['total_charge']) * (1.0 - discount)))
 
 print('DONE!')
