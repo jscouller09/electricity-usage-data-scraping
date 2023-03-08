@@ -8,10 +8,10 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # global imports
 import os
-import functools
+import re
 import traceback
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from selenium.webdriver import Firefox
 from selenium.webdriver.firefox.service import Service
@@ -185,6 +185,16 @@ class AutoBrowser(object):
 
 # initialise browser
 browser = AutoBrowser()
+# check the latest date for which we have data
+cur_date = datetime.now()
+stop_date = cur_date - timedelta(days=365)
+regex = re.compile('^.*59PM ([\w ]*).csv$')
+for f in os.listdir(browser.outputs_dir):
+    f_path = os.path.join(browser.outputs_dir, f)
+    if os.path.isfile(f_path):
+        f_date = pd.to_datetime(regex.match(f)[1])
+        if f_date > stop_date:
+            stop_date = f_date
 # do login
 browser.login(continue_btn_id='continue', login_btn_id='next', username_fld_id='email', password_fld_id='password', load_invisible_id='loader', success_visible_cls='account-switcher-button-name', success_invisible_cls='loading-portal')
 # navigate to usage page
@@ -194,8 +204,8 @@ browser.click_button('a[href="/account/products/consumption"]', hiding_elem_css=
 # click the 3rd match for the button class, which is the hourly data button
 browser.click_button('button.electricity-historical-tabs', hiding_elem_css='loading-portal', i=2)
 # extract data
-stop_date = pd.to_datetime('2023-03-05')
-cur_date = datetime.now()
+# use line below to manually specify stop date
+# stop_date = pd.to_datetime('2023-03-05')
 while cur_date > stop_date:
     cur_date = browser.extract_data(toggle_btn_css='button.toggle', previous_btn_css='button.previous', no_data_css='div.error-text', data_css='div.chart-container.HOURLY.electricity-chart', download_btn_css='button.download-usage-excel')
 

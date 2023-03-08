@@ -123,3 +123,4 @@ dmypy.json
 *.csv
 outputs/
 
+Pipfile.lock
