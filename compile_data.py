@@ -48,11 +48,11 @@ for f in os.listdir(outputs_dir):
     f_path = os.path.join(outputs_dir, f)
     if os.path.isfile(f_path):
         # read csv file
-        new_data = pd.read_csv(f_path)
-        # convert date col into datetime
-        new_data['date'] = new_data['date'].apply(pd.to_datetime)
+        new_data = pd.read_csv(f_path, parse_dates=['date'], dayfirst=True)
     all_data = pd.concat([all_data, new_data])
 
+# convert date col into timezone aware
+all_data = all_data.set_index('date').tz_localize(tz='Pacific/Auckland', ambiguous='infer').reset_index()
 # sort by date
 all_data.sort_values('date', inplace=True)
 start_ts = all_data.date.iloc[0]
@@ -81,9 +81,13 @@ all_data.loc[~all_data['off-peak'], 'weekday_kWh'] = all_data['usage_kWh'].loc[~
 # calc charges per day and per kWh
 all_data['usage_charge'] = all_data['rate'] * all_data['usage_kWh']
 # calculate daily charge based on number of hourly timesteps associated with each day - should be 24, but during daylight savings switchover can be 23 or 25
-for i, row in all_data.iterrows():
-    num_hrs = all_data.loc[(all_data['day_of_year'] == row['day_of_year']) & (all_data['year'] == row['year'])].shape[0]
-    all_data['daily_charge'] = daily_chg / num_hrs
+all_data['daily_charge'] = daily_chg / 24
+num_hrs_table = all_data[['day', 'day_of_year', 'year']].groupby(['year', 'day_of_year']).count()
+dst_num_hrs_table = num_hrs_table.loc[(num_hrs_table != 24).values]
+for (year, day_of_year), num_hrs in dst_num_hrs_table.iterrows():
+    mask = (all_data['year'] == year) & (all_data['day_of_year'] == day_of_year)
+    all_data.loc[mask, 'daily_charge'] = daily_chg / num_hrs[0]
+# calc total charge
 all_data['total_charge'] = all_data['usage_charge'] + all_data['daily_charge']
 # add ts index and check for gaps
 all_data = pd.DataFrame(index=ts_index).join(all_data.set_index('date'))
@@ -105,29 +109,25 @@ mthly_totals = mthly_totals.T
 # add averages
 mthly_totals['avg'] = mthly_totals.mean(axis=1)
 
-# write output CSV
-mthly_totals.to_csv('mthly_totals.csv')
-daily_totals.to_csv('daily_totals.csv')
-all_data.to_csv('all_data.csv')
-print('Wrote compiled data csv files!')
-
-print('Missing data for the following timestamps:')
-for ts, data in missing.iterrows():
-    print('\t{:%Y-%m-%d %H:%M}'.format(ts))
-
-print('Duplicated data for the following timestamps:')
-for ts, data in dups.iterrows():
-    print('\t{:%Y-%m-%d %H:%M} | {}'.format(ts, data.usage))
+# report on missing/duplicated data
+if not missing.empty:
+    print('Missing data for the following timestamps:')
+    for ts, data in missing.iterrows():
+        print('\t{:%Y-%m-%d %H:%M}'.format(ts))
+if not dups.empty:
+    print('Duplicated data for the following timestamps:')
+    for ts, data in dups.iterrows():
+        print('\t{:%Y-%m-%d %H:%M} | {}'.format(ts, data.usage))
 
 # billing period to check - note billing period will end at the end of the day on the last day
-bill_start = pd.to_datetime('21/03/2023', dayfirst=True) + pd.Timedelta(hours=1) # total for first hour of the billing period is at 1am
-bill_end = pd.to_datetime('22/04/2023', dayfirst=True) + pd.Timedelta(hours=24) # total for last hour of the billing period is at midnight on the day after
+bill_start = pd.Timestamp(pd.to_datetime('21/03/2023', dayfirst=True) + pd.Timedelta(hours=1), tz='Pacific/Auckland') # total for first hour of the billing period is at 1am
+bill_end = pd.Timestamp(pd.to_datetime('22/04/2023', dayfirst=True) + pd.Timedelta(hours=24), tz='Pacific/Auckland') # total for last hour of the billing period is at midnight on the day after
 bill_ts = all_data.loc[bill_start:bill_end].index
 bill_days = bill_ts[-1] - bill_ts[0]
 if bill_days.components.hours == 23:
     # timeseries ends at 23:00 because no subsequent data available
     bill_days += pd.Timedelta(hours=1)
-days_bill_period = (bill_end - bill_start + pd.Timedelta(hours=1)).days # add hour because of starting with 1am on first billing day
+days_bill_period = (bill_end - bill_start).days
 days_current = bill_days.days
 days_remaining_bill_period = days_bill_period - days_current
 bill_data = all_data.loc[bill_start:bill_end, cols].sum()
@@ -153,5 +153,11 @@ print('\t{:10.2f}  NZD charged'.format(bill_data['total_charge']))
 print('\t{:10.2f}  NZD average daily charge over bill period'.format(avg_daily_charge))
 print('\t{:10.2f}  NZD total charges'.format(avg_daily_charge*days_remaining_bill_period + bill_data['total_charge']))
 print('\t{:10.2f}  NZD estimated bill (discounted)'.format((avg_daily_charge*days_remaining_bill_period + bill_data['total_charge']) * (1.0 - discount)))
+
+# write output CSV
+mthly_totals.to_csv('mthly_totals.csv')
+daily_totals.to_csv('daily_totals.csv')
+all_data.to_csv('all_data.csv')
+print('Wrote compiled data csv files!')
 
 print('DONE!')
