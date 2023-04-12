@@ -124,3 +124,4 @@ dmypy.json
 outputs/
 
 Pipfile.lock
+*.7z
