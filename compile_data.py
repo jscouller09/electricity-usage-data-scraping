@@ -120,16 +120,16 @@ if not dups.empty:
         print('\t{:%Y-%m-%d %H:%M} | {}'.format(ts, data.usage))
 
 # billing period to check - note billing period will end at the end of the day on the last day
-bill_start = pd.Timestamp(pd.to_datetime('23/04/2023', dayfirst=True) + pd.Timedelta(hours=1), tz='Pacific/Auckland') # total for first hour of the billing period is at 1am
-bill_end = pd.Timestamp(pd.to_datetime('22/05/2023', dayfirst=True) + pd.Timedelta(hours=24), tz='Pacific/Auckland') # total for last hour of the billing period is at midnight on the day after
+bill_start = pd.Timestamp(pd.to_datetime('23/05/2023', dayfirst=True) + pd.Timedelta(hours=1), tz='Pacific/Auckland') # total for first hour of the billing period is at 1am
+bill_end = pd.Timestamp(pd.to_datetime('21/06/2023', dayfirst=True) + pd.Timedelta(hours=24), tz='Pacific/Auckland') # total for last hour of the billing period is at midnight on the day after
 bill_ts = all_data.loc[bill_start:bill_end].index
 bill_days = bill_ts[-1] - bill_ts[0]
 if bill_days.components.hours == 23:
     # timeseries ends at 23:00 because no subsequent data available
     bill_days += pd.Timedelta(hours=1)
-days_bill_period = (bill_end - bill_start).days
+days_bill_period = (bill_end - bill_start + pd.Timedelta(hours=1)).days
 days_current = bill_days.days
-days_remaining_bill_period = days_bill_period - days_current
+days_remaining_bill_period = max(0, days_bill_period - days_current)
 bill_data = all_data.loc[bill_start:bill_end, cols].sum()
 avg_daily_charge = all_data.loc[bill_start:bill_end, ['day_of_year', 'total_charge']].groupby('day_of_year').sum().mean()[0]
 # add percentages
