@@ -59,7 +59,7 @@ class AutoBrowser(object):
     :raises TimeoutException: Raised when a target element does not appear after the configured timeout
     '''
 
-    def __init__(self, env_filepath=None, timeout=30):
+    def __init__(self, env_filepath=None, timeout=60):
         # working dir
         self.working_dir = os.path.dirname(__file__)
         # outputs dir
