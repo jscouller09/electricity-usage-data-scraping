@@ -48,7 +48,8 @@ for f in os.listdir(outputs_dir):
     f_path = os.path.join(outputs_dir, f)
     if os.path.isfile(f_path):
         # read csv file
-        new_data = pd.read_csv(f_path, parse_dates=['date'], dayfirst=True)
+        new_data = pd.read_csv(f_path)
+        new_data['date'] = pd.to_datetime(new_data['date'].str.replace('(?<=\d)st|nd|rd|th(?= [a-zA-Z])', '', regex=True), format="%I:%M%p %d %B %Y") #date format like this 12:00AM 6th May 2023
     all_data = pd.concat([all_data, new_data])
 
 # convert date col into timezone aware
@@ -86,7 +87,7 @@ num_hrs_table = all_data[['day', 'day_of_year', 'year']].groupby(['year', 'day_o
 dst_num_hrs_table = num_hrs_table.loc[(num_hrs_table != 24).values]
 for (year, day_of_year), num_hrs in dst_num_hrs_table.iterrows():
     mask = (all_data['year'] == year) & (all_data['day_of_year'] == day_of_year)
-    all_data.loc[mask, 'daily_charge'] = daily_chg / num_hrs[0]
+    all_data.loc[mask, 'daily_charge'] = daily_chg / num_hrs.day
 # calc total charge
 all_data['total_charge'] = all_data['usage_charge'] + all_data['daily_charge']
 # add ts index and check for gaps
@@ -131,7 +132,7 @@ days_bill_period = (bill_end - bill_start + pd.Timedelta(hours=1)).days
 days_current = bill_days.days
 days_remaining_bill_period = max(0, days_bill_period - days_current)
 bill_data = all_data.loc[bill_start:bill_end, cols].sum()
-avg_daily_charge = all_data.loc[bill_start:bill_end, ['day_of_year', 'total_charge']].groupby('day_of_year').sum().mean()[0]
+avg_daily_charge = all_data.loc[bill_start:bill_end, ['day_of_year', 'total_charge']].groupby('day_of_year').sum().mean().total_charge
 # add percentages
 bill_data['night_perc'] = 100 * bill_data['night_kWh'] / bill_data['usage_kWh']
 bill_data['weekend_perc'] = 100 * bill_data['weekend_kWh'] / bill_data['usage_kWh']
