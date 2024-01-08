@@ -15,6 +15,12 @@ from datetime import datetime
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # main code
 
+# new Genesis rates from 16th Jan 2024
+# daily_chg = (90 / 100) * 1.15
+# off_peak_chg = (12.18 / 100) * 1.15
+# peak_chg = (24.38 / 100) * 1.15
+# discount = 0.11
+
 # genesis fixed 1 year energy plus contract rates
 daily_chg = (60 / 100) * 1.15
 off_peak_chg = (12.85 / 100) * 1.15
