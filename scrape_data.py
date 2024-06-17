@@ -169,7 +169,7 @@ class AutoBrowser(object):
 
         # check if data already exists in the output folder for this day - only download new data
         cur_date = pd.to_datetime(elem_btn_toggle.text)
-        downloaded_dates = [pd.to_datetime(f.split(' to 11 59PM ')[1][:-4]) for f in os.listdir(self.outputs_dir) if os.path.isfile(os.path.join(self.outputs_dir, f))]
+        downloaded_dates = [pd.to_datetime(re.split(r' to 11[ _]59PM ', f)[1][:-4]) for f in os.listdir(self.outputs_dir) if os.path.isfile(os.path.join(self.outputs_dir, f))]
         if cur_date not in downloaded_dates:
             # now to download data for the current day
             self.click_button(download_btn_css)
