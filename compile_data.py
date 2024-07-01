@@ -127,8 +127,8 @@ if not dups.empty:
         print('\t{:%Y-%m-%d %H:%M} | {}'.format(ts, data.usage))
 
 # billing period to check - note billing period will end at the end of the day on the last day
-bill_start = pd.Timestamp(pd.to_datetime('27/05/2024', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
-bill_end = pd.Timestamp(pd.to_datetime('25/06/2024', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
+bill_start = pd.Timestamp(pd.to_datetime('26/06/2024', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
+bill_end = pd.Timestamp(pd.to_datetime('27/07/2024', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
 bill_ts = all_data.loc[bill_start:bill_end].index
 bill_days = bill_ts[-1] - bill_ts[0]
 if bill_days.components.hours == 23:
