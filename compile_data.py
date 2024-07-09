@@ -128,7 +128,9 @@ if not dups.empty:
 
 # billing period to check - note billing period will end at the end of the day on the last day
 bill_start = pd.Timestamp(pd.to_datetime('26/06/2024', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
+# bill_start = pd.Timestamp(pd.to_datetime('01/01/2024', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
 bill_end = pd.Timestamp(pd.to_datetime('27/07/2024', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
+# bill_end = pd.Timestamp(pd.to_datetime('31/12/2024', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
 bill_ts = all_data.loc[bill_start:bill_end].index
 bill_days = bill_ts[-1] - bill_ts[0]
 if bill_days.components.hours == 23:
@@ -139,6 +141,7 @@ days_current = bill_days.days
 days_remaining_bill_period = max(0, days_bill_period - days_current)
 bill_data = all_data.loc[bill_start:bill_end, cols].sum()
 avg_daily_charge = all_data.loc[bill_start:bill_end, ['day_of_year', 'total_charge']].groupby('day_of_year').sum().mean().total_charge
+avg_daily_use =  all_data.loc[bill_start:bill_end, ['day_of_year', 'usage_kWh']].groupby('day_of_year').sum().mean().usage_kWh
 # add percentages
 bill_data['night_perc'] = 100 * bill_data['night_kWh'] / bill_data['usage_kWh']
 bill_data['weekend_perc'] = 100 * bill_data['weekend_kWh'] / bill_data['usage_kWh']
@@ -160,6 +163,7 @@ print('\t{:10.2f}  NZD charged'.format(bill_data['total_charge']))
 print('\t{:10.2f}  NZD average daily charge over bill period'.format(avg_daily_charge))
 print('\t{:10.2f}  NZD total charges'.format(avg_daily_charge*days_remaining_bill_period + bill_data['total_charge']))
 print('\t{:10.2f}  NZD estimated bill (discounted)'.format((avg_daily_charge*days_remaining_bill_period + bill_data['total_charge']) * (1.0 - discount)))
+print('\t{:10.2f}  kWh estimated total use'.format(bill_data['usage_kWh'] + avg_daily_use*days_remaining_bill_period))
 
 # write output CSV
 mthly_totals.to_csv('mthly_totals.csv')
