@@ -199,7 +199,7 @@ for f in os.listdir(browser.outputs_dir):
 browser.login(continue_btn_id='continue', login_btn_id='next', username_fld_id='email', password_fld_id='password', load_invisible_id='loader', success_visible_cls='account-switcher-button-name', success_invisible_cls='loading-portal')
 # navigate to usage page
 print('Navigating to usage page...')
-browser.click_button('div.header-tabs-top-link', hiding_elem_css='loading-portal', i=0)
+browser.click_button('button.header-tabs-top-link', hiding_elem_css='loading-portal', i=0)
 browser.click_button('a[href="/account/products/consumption"]', hiding_elem_css='loading-portal')
 # click the 3rd match for the button class, which is the hourly data button
 browser.click_button('button.electricity-historical-tabs', hiding_elem_css='loading-portal', i=2)
