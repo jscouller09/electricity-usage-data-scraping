@@ -21,26 +21,11 @@ off_peak_chg = (12.18 / 100) * 1.15
 peak_chg = (24.38 / 100) * 1.15
 discount = 0.11
 
-# genesis fixed 1 year energy plus contract rates
-# daily_chg = (60 / 100) * 1.15
-# off_peak_chg = (12.85 / 100) * 1.15
-# peak_chg = (30.51 / 100) * 1.15
-# discount = 0.14
-
-# genesis fixed 1 year basic contract rates
-# daily_chg = (30 / 100) * 1.15
-# off_peak_chg = (12 / 100) * 1.15
-# peak_chg = (28 / 100) * 1.15
-
-# new Frank rates
-# daily_chg = (60 / 100) * 1.15
-# off_peak_chg = (16.50 / 100) * 1.15
-# peak_chg = (27.10 / 100) * 1.15
-
-# current Frank rates
-# daily_chg = (30 / 100) * 1.15
-# off_peak_chg = (11.71 / 100) * 1.15
-# peak_chg = (26.73 / 100) * 1.15
+# genesis fixed 1 year energy plus standard fixed plan (no longer low user)
+# daily_chg = (116.29 / 100) * 1.15
+# off_peak_chg = (11.12 / 100) * 1.15
+# peak_chg = (23.32 / 100) * 1.15
+# discount = 0.11
 
 # working dir
 working_dir = os.path.dirname(__file__)
@@ -127,9 +112,9 @@ if not dups.empty:
         print('\t{:%Y-%m-%d %H:%M} | {}'.format(ts, data.usage))
 
 # billing period to check - note billing period will end at the end of the day on the last day
-bill_start = pd.Timestamp(pd.to_datetime('23/10/2024', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
+bill_start = pd.Timestamp(pd.to_datetime('24/11/2024', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
 # bill_start = pd.Timestamp(pd.to_datetime('01/01/2024', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
-bill_end = pd.Timestamp(pd.to_datetime('23/11/2024', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
+bill_end = pd.Timestamp(pd.to_datetime('22/12/2024', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
 # bill_end = pd.Timestamp(pd.to_datetime('31/12/2024', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
 bill_ts = all_data.loc[bill_start:bill_end].index
 bill_days = bill_ts[-1] - bill_ts[0]
