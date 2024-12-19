@@ -21,7 +21,7 @@ off_peak_chg = (12.18 / 100) * 1.15
 peak_chg = (24.38 / 100) * 1.15
 discount = 0.11
 
-# genesis fixed 1 year energy plus standard fixed plan (no longer low user)
+# genesis fixed 1 year energy plus standard fixed plan (no longer low user) - applies from 18th Jan 2025
 # daily_chg = (116.29 / 100) * 1.15
 # off_peak_chg = (11.12 / 100) * 1.15
 # peak_chg = (23.32 / 100) * 1.15
