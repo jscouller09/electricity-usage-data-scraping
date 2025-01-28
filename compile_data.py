@@ -16,16 +16,16 @@ from datetime import datetime
 # main code
 
 # new Genesis rates from 16th Jan 2024
-daily_chg = (90 / 100) * 1.15
-off_peak_chg = (12.18 / 100) * 1.15
-peak_chg = (24.38 / 100) * 1.15
-discount = 0.11
-
-# genesis fixed 1 year energy plus standard fixed plan (no longer low user) - applies from 18th Jan 2025
-# daily_chg = (116.29 / 100) * 1.15
-# off_peak_chg = (11.12 / 100) * 1.15
-# peak_chg = (23.32 / 100) * 1.15
+# daily_chg = (90 / 100) * 1.15
+# off_peak_chg = (12.18 / 100) * 1.15
+# peak_chg = (24.38 / 100) * 1.15
 # discount = 0.11
+
+# genesis fixed 1 year energy plus standard fixed plan (no longer low user) - applies from 19th Jan 2025
+daily_chg = (116.29 / 100) * 1.15
+off_peak_chg = (11.12 / 100) * 1.15
+peak_chg = (23.32 / 100) * 1.15
+discount = 0.11
 
 # working dir
 working_dir = os.path.dirname(__file__)
@@ -112,10 +112,10 @@ if not dups.empty:
         print('\t{:%Y-%m-%d %H:%M} | {}'.format(ts, data.usage))
 
 # billing period to check - note billing period will end at the end of the day on the last day
-bill_start = pd.Timestamp(pd.to_datetime('23/12/2024', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
-# bill_start = pd.Timestamp(pd.to_datetime('01/01/2024', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
-bill_end = pd.Timestamp(pd.to_datetime('25/01/2025', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
-# bill_end = pd.Timestamp(pd.to_datetime('31/12/2024', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
+bill_start = pd.Timestamp(pd.to_datetime('26/01/2025', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
+# bill_start = pd.Timestamp(pd.to_datetime('01/02/2024', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
+bill_end = pd.Timestamp(pd.to_datetime('24/02/2025', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
+# bill_end = pd.Timestamp(pd.to_datetime('01/02/2025', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
 bill_ts = all_data.loc[bill_start:bill_end].index
 bill_days = bill_ts[-1] - bill_ts[0]
 if bill_days.components.hours == 23:
