@@ -125,3 +125,4 @@ outputs/
 
 Pipfile.lock
 *.7z
+/.vscode
