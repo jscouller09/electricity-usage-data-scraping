@@ -25,7 +25,7 @@ from datetime import datetime
 daily_chg = (116.29 / 100) * 1.15
 off_peak_chg = (11.12 / 100) * 1.15
 peak_chg = (23.32 / 100) * 1.15
-discount = 0.11
+discount = 0.08
 
 # working dir
 working_dir = os.path.dirname(__file__)
