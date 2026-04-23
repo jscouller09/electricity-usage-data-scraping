@@ -40,7 +40,7 @@ for f in os.listdir(outputs_dir):
     if os.path.isfile(f_path):
         # read csv file
         new_data = pd.read_csv(f_path)
-        new_data['date'] = pd.to_datetime(new_data['date'].str.replace('(?<=\d)st|nd|rd|th(?= [a-zA-Z])', '', regex=True), format="%I:%M%p %d %B %Y") #date format like this 12:00AM 6th May 2023
+        new_data['date'] = pd.to_datetime(new_data['date'].str.replace(r'(?<=\d)st|nd|rd|th(?= [a-zA-Z])', '', regex=True), format="%I:%M%p %d %B %Y") #date format like this 12:00AM 6th May 2023
     all_data = pd.concat([all_data, new_data])
 
 # convert date col into timezone aware

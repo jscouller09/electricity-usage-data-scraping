@@ -17,7 +17,7 @@ from selenium.webdriver import Firefox
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -188,18 +188,23 @@ browser = AutoBrowser()
 # check the latest date for which we have data
 cur_date = datetime.now()
 stop_date = cur_date - timedelta(days=365)
-regex = re.compile('^.*59PM ([\w ]*).csv$')
+regex = re.compile(r'^.*59PM ([\w ]*).csv$')
 for f in os.listdir(browser.outputs_dir):
     f_path = os.path.join(browser.outputs_dir, f)
     if os.path.isfile(f_path):
-        f_date = pd.to_datetime(regex.match(f)[1])
-        if f_date > stop_date:
-            stop_date = f_date
+        file_match = regex.match(f)
+        if file_match is not None:
+            date_str = file_match[1]
+            # Remove st / nd / rd / th
+            cleaned = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', date_str)
+            f_date = datetime.strptime(cleaned, '%d %B %Y')
+            if f_date > stop_date:
+                stop_date = f_date
 # do login
 browser.login(continue_btn_id='continue', login_btn_id='next', username_fld_id='email', password_fld_id='password', load_invisible_id='loader', success_visible_cls='account-switcher-button-name', success_invisible_cls='loading-portal')
 # navigate to usage page
 print('Navigating to usage page...')
-browser.click_button('button.header-tabs-top-link', hiding_elem_css='loading-portal', i=0)
+browser.click_button('button.header-tabs-top-link', hiding_elem_css='initialize-loader finished-loader', i=0)
 browser.click_button('a[href="/account/products/consumption"]', hiding_elem_css='loading-portal')
 # click the 3rd match for the button class, which is the hourly data button
 browser.click_button('button.electricity-historical-tabs', hiding_elem_css='loading-portal', i=2)
