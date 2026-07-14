@@ -20,11 +20,64 @@ from datetime import datetime
 # off_peak_chg = (12.18 / 100) * 1.15
 # peak_chg = (24.38 / 100) * 1.15
 # discount = 0.11
+# ------------------------------------------
+
+# Contact Good Charge => 01/07/2025 - 01/07/2026 = $4142.88 
+# daily_chg = (239.90 / 100) * 1.15
+# night_chg = (15.6 / 100) * 1.15
+# peak_chg = (31.7 / 100) * 1.15
+# off_peak_chg = (31.7 / 100) * 1.15
+# weekend_chg = (31.7 / 100) * 1.15
+# discount = 0.0
+
+# Meridian Freedom => 01/07/2025 - 01/07/2026 = $3839.83 
+# daily_chg = (170.25 / 100) * 1.15
+# night_chg = (19.46 / 100) * 1.15
+# peak_chg = (31.39 / 100) * 1.15
+# off_peak_chg = (31.39 / 100) * 1.15
+# weekend_chg = (19.46 / 100) * 1.15
+# discount = 0.0
+
+# Meridian Night Saver => 01/07/2025 - 01/07/2026 = $3870.77
+# daily_chg = (170.25 / 100) * 1.15
+# night_chg = (19.66 / 100) * 1.15
+# peak_chg = (27.71 / 100) * 1.15
+# off_peak_chg = (27.71 / 100) * 1.15
+# weekend_chg = (27.71 / 100) * 1.15
+# discount = 0.0
+
+# Genesis EVHome => 01/07/2025 - 01/07/2026 = $3650.49
+# daily_chg = (184.94 / 100) * 1.15
+# night_chg = (14.44 / 100) * 1.15
+# peak_chg = (28.91 / 100) * 1.15
+# off_peak_chg = (28.91 / 100) * 1.15
+# weekend_chg = (28.91 / 100) * 1.15
+# discount = 0.0
+
+# Elextric Kiwi Sunday Saver Day/Night Residential Standard => 01/07/2025 - 01/07/2026 = $4406.15 without accounting for free power on Sunday or 1hr free each day
+# # 1 hr free Mon-Sat, free power on Sundays
+# daily_chg = (271.0 / 100) * 1.15
+# night_chg = (23.94 / 100) * 1.15 #9pm-7am everyday
+# peak_chg = (26.59 / 100) * 1.15 #7am-9am, 5pm-9pm
+# off_peak_chg = (23.94 / 100) * 1.15 #9am-5pm
+# weekend_chg = (23.94 / 100) * 1.15 # sat/sun non-night hours
+# discount = 0
+
+# new Genesis PowerHome rates from 1 Sep 2026 => 01/07/2025 - 01/07/2026 = $3438.58
+# daily_chg = (169.30 / 100) * 1.15
+# night_chg = (16.17 / 100) * 1.15
+# peak_chg = (26.95 / 100) * 1.15
+# off_peak_chg = (26.95 / 100) * 1.15
+# weekend_chg = (20.51 / 100) * 1.15
+# discount = 0.0
 
 # genesis fixed 1 year energy plus standard fixed plan (no longer low user) - applies from 19th Jan 2025
+# => 01/07/2025 - 01/07/2026 = $2307.38
 daily_chg = (116.29 / 100) * 1.15
-off_peak_chg = (11.12 / 100) * 1.15
-peak_chg = (23.32 / 100) * 1.15
+night_chg = (11.12 / 100) * 1.15 #9pm-7am everyday
+peak_chg = (23.32 / 100) * 1.15 #7am-9am, 5pm-9pm
+off_peak_chg = (23.32 / 100) * 1.15 #9am-5pm
+weekend_chg = (11.12 / 100) * 1.15 # sat/sun non-night hours
 discount = 0.08
 
 # working dir
@@ -58,9 +111,14 @@ all_data['day_of_year'] = all_data['date'].apply(lambda ts: ts.dayofyear)
 # add column for night 9pm-7am/weekend times
 all_data['night'] = all_data['date'].apply(lambda ts: (ts.hour < 7) or (ts.hour >= 21))
 all_data['weekend'] = all_data['date'].apply(lambda ts: ts.dayofweek >= 5)
-all_data['off-peak'] = all_data['night'] | all_data['weekend']
+all_data['peak'] = all_data['date'].apply(lambda ts: ts.hour in [7, 8, 17, 18, 19, 20])
+all_data['off-peak'] = all_data['date'].apply(lambda ts: (ts.hour >= 9) and (ts.hour <= 16))
 # add rates
-all_data['rate'] = all_data['off-peak'].apply(lambda off_pk: off_peak_chg if off_pk else peak_chg)
+all_data['rate'] = 0.0
+all_data.loc[~all_data['weekend'] & all_data['off-peak'], 'rate'] = off_peak_chg
+all_data.loc[~all_data['weekend'] & all_data['peak'], 'rate'] = peak_chg
+all_data.loc[all_data['weekend'] & ~all_data['night'], 'rate'] = weekend_chg
+all_data.loc[all_data['night'], 'rate'] = night_chg
 # convert usage in kWh to number
 all_data['usage_kWh'] = all_data['usage'].apply(lambda s: float(s[:-4]))
 # sort out usage at different times
@@ -68,8 +126,11 @@ all_data['night_kWh'] = 0.0
 all_data.loc[all_data['night'], 'night_kWh'] = all_data['usage_kWh'].loc[all_data['night']]
 all_data['weekend_kWh'] = 0.0
 all_data.loc[all_data['weekend'] & ~all_data['night'], 'weekend_kWh'] = all_data['usage_kWh'].loc[all_data['weekend'] & ~all_data['night']]
-all_data['weekday_kWh'] = 0.0
-all_data.loc[~all_data['off-peak'], 'weekday_kWh'] = all_data['usage_kWh'].loc[~all_data['off-peak']]
+all_data['peak_kWh'] = 0.0
+all_data.loc[~all_data['weekend'] & all_data['peak'], 'peak_kWh'] = all_data['usage_kWh'].loc[~all_data['weekend'] & all_data['peak']]
+all_data['off_peak_kWh'] = 0.0
+all_data.loc[~all_data['weekend'] & all_data['off-peak'], 'off_peak_kWh'] = all_data['usage_kWh'].loc[~all_data['weekend'] & all_data['off-peak']]
+all_data['weekday_kWh'] = all_data['off_peak_kWh'] + all_data['peak_kWh']
 # calc charges per day and per kWh
 all_data['usage_charge'] = all_data['rate'] * all_data['usage_kWh']
 # calculate daily charge based on number of hourly timesteps associated with each day - should be 24, but during daylight savings switchover can be 23 or 25
@@ -87,7 +148,7 @@ missing = all_data.loc[all_data.isna().all(axis=1)]
 dups = all_data.loc[all_data.index.duplicated('first') | all_data.index.duplicated('last')]
 # calc total by day and month
 index = ['year', 'month', 'day']
-cols = ['usage_kWh', 'usage_charge', 'daily_charge', 'total_charge', 'weekend_kWh', 'night_kWh', 'weekday_kWh']
+cols = ['usage_kWh', 'usage_charge', 'daily_charge', 'total_charge', 'weekend_kWh', 'night_kWh', 'weekday_kWh', 'off_peak_kWh', 'peak_kWh']
 daily_totals = all_data.pivot_table(cols, index, aggfunc='sum')
 mthly_totals = daily_totals.groupby(['year', 'month']).sum()
 mthly_totals['days'] = daily_totals.groupby(['year', 'month']).size()
@@ -95,7 +156,8 @@ mthly_totals['days'] = daily_totals.groupby(['year', 'month']).size()
 mthly_totals['night_perc'] = 100 * mthly_totals['night_kWh'] / mthly_totals['usage_kWh']
 mthly_totals['weekend_perc'] = 100 * mthly_totals['weekend_kWh'] / mthly_totals['usage_kWh']
 mthly_totals['weekday_perc'] = 100 * mthly_totals['weekday_kWh'] / mthly_totals['usage_kWh']
-mthly_totals['off_peak_perc'] = 100 * (mthly_totals['night_kWh'] + mthly_totals['weekend_kWh']) / mthly_totals['usage_kWh']
+mthly_totals['off_peak_perc'] = 100 * mthly_totals['off_peak_kWh'] / mthly_totals['usage_kWh']
+mthly_totals['peak_perc'] = 100 * mthly_totals['peak_kWh'] / mthly_totals['usage_kWh']
 # transpose
 mthly_totals = mthly_totals.T
 # add averages
@@ -112,10 +174,10 @@ if not dups.empty:
         print('\t{:%Y-%m-%d %H:%M} | {}'.format(ts, data.usage))
 
 # billing period to check - note billing period will end at the end of the day on the last day
-bill_start = pd.Timestamp(pd.to_datetime('30/04/2026', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
-# bill_start = pd.Timestamp(pd.to_datetime('31/01/2025', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
-bill_end = pd.Timestamp(pd.to_datetime('01/06/2026', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
-# bill_end = pd.Timestamp(pd.to_datetime('31/01/2026', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
+bill_start = pd.Timestamp(pd.to_datetime('30/06/2026', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
+bill_start = pd.Timestamp(pd.to_datetime('02/06/2026', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
+bill_end = pd.Timestamp(pd.to_datetime('29/07/2026', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
+bill_end = pd.Timestamp(pd.to_datetime('29/06/2026', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
 bill_ts = all_data.loc[bill_start:bill_end].index
 bill_days = bill_ts[-1] - bill_ts[0]
 if bill_days.components.hours == 23:
@@ -131,7 +193,8 @@ avg_daily_use =  all_data.loc[bill_start:bill_end, ['day_of_year', 'usage_kWh']]
 bill_data['night_perc'] = 100 * bill_data['night_kWh'] / bill_data['usage_kWh']
 bill_data['weekend_perc'] = 100 * bill_data['weekend_kWh'] / bill_data['usage_kWh']
 bill_data['weekday_perc'] = 100 * bill_data['weekday_kWh'] / bill_data['usage_kWh']
-bill_data['off_peak_perc'] = 100 * (bill_data['night_kWh'] + bill_data['weekend_kWh']) / bill_data['usage_kWh']
+bill_data['off_peak_perc'] = 100 * bill_data['off_peak_kWh'] / bill_data['usage_kWh']
+bill_data['peak_perc'] = 100 * bill_data['peak_kWh'] / bill_data['usage_kWh']
 print('Over billing period from {:%d/%m/%y %H:%M} to {:%d/%m/%y %H:%M}:'.format(bill_start, bill_end))
 print('\t{:8d}/{:2d} days complete'.format(days_current, days_bill_period))
 print('\t{:11d} days remaining'.format(days_remaining_bill_period))
@@ -139,12 +202,16 @@ print('\t{:10.2f}% night use'.format(bill_data['night_perc']))
 print('\t{:10.2f}% weekend use'.format(bill_data['weekend_perc']))
 print('\t{:10.2f}% weekday use'.format(bill_data['weekday_perc']))
 print('\t{:10.2f}% off-peak use'.format(bill_data['off_peak_perc']))
-print('\t{:10.2f}  kWh night use'.format(bill_data['night_kWh']))
-print('\t{:10.2f}  kWh weekend use'.format(bill_data['weekend_kWh']))
-print('\t{:10.2f}  kWh weekday use'.format(bill_data['weekday_kWh']))
-print('\t{:10.2f}  kWh off-peak use'.format(bill_data['night_kWh'] + bill_data['weekend_kWh']))
+print('\t{:10.2f}% peak use'.format(bill_data['peak_perc']))
+print('\t{:10.2f}  kWh night use (9pm-7am)'.format(bill_data['night_kWh']))
+print('\t{:10.2f}  kWh weekend use (7am-9pm Sat/Sun)'.format(bill_data['weekend_kWh']))
+print('\t{:10.2f}  kWh weekday use (7am-9pm Mon-Fri)'.format(bill_data['weekday_kWh']))
+print('\t{:10.2f}  kWh off-peak use (9am-5pm Mon-Fri)'.format(bill_data['off_peak_kWh']))
+print('\t{:10.2f}  kWh peak use (7am-9am & 5pm-9pm Mon-Fri)'.format(bill_data['peak_kWh']))
 print('\t{:10.2f}  kWh total use'.format(bill_data['usage_kWh']))
-print('\t{:10.2f}  NZD charged'.format(bill_data['total_charge']))
+print('\t{:10.2f}  NZD charged for usage'.format(bill_data['usage_charge']))
+print('\t{:10.2f}  NZD charged for metering'.format(bill_data['daily_charge']))
+print('\t{:10.2f}  NZD charged total'.format(bill_data['total_charge']))
 print('\t{:10.2f}  NZD average daily charge over bill period'.format(avg_daily_charge))
 print('\t{:10.2f}  NZD total charges'.format(avg_daily_charge*days_remaining_bill_period + bill_data['total_charge']))
 print('\t{:10.2f}  NZD estimated bill (discounted)'.format((avg_daily_charge*days_remaining_bill_period + bill_data['total_charge']) * (1.0 - discount)))
