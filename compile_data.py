@@ -22,6 +22,15 @@ from datetime import datetime
 # discount = 0.11
 # ------------------------------------------
 
+# Elextric Kiwi Sunday Saver Day/Night Residential Standard => 01/07/2025 - 01/07/2026 = $4406.15 without accounting for free power on Sunday or 1hr free each day
+# # 1 hr free Mon-Sat, free power on Sundays
+# daily_chg = (271.0 / 100) * 1.15
+# night_chg = (23.94 / 100) * 1.15 #9pm-7am everyday
+# peak_chg = (26.59 / 100) * 1.15 #7am-9am, 5pm-9pm
+# off_peak_chg = (23.94 / 100) * 1.15 #9am-5pm
+# weekend_chg = (23.94 / 100) * 1.15 # sat/sun non-night hours
+# discount = 0
+
 # Contact Good Charge => 01/07/2025 - 01/07/2026 = $4142.88 
 # daily_chg = (239.90 / 100) * 1.15
 # night_chg = (15.6 / 100) * 1.15
@@ -47,28 +56,27 @@ from datetime import datetime
 # discount = 0.0
 
 # Genesis EVHome => 01/07/2025 - 01/07/2026 = $3650.49
-# daily_chg = (184.94 / 100) * 1.15
-# night_chg = (14.44 / 100) * 1.15
-# peak_chg = (28.91 / 100) * 1.15
-# off_peak_chg = (28.91 / 100) * 1.15
-# weekend_chg = (28.91 / 100) * 1.15
-# discount = 0.0
+daily_chg = (184.94 / 100) * 1.15
+night_chg = (14.44 / 100) * 1.15
+peak_chg = (28.91 / 100) * 1.15
+off_peak_chg = (28.91 / 100) * 1.15
+weekend_chg = (28.91 / 100) * 1.15
+discount = 0.0
 
-# Elextric Kiwi Sunday Saver Day/Night Residential Standard => 01/07/2025 - 01/07/2026 = $4406.15 without accounting for free power on Sunday or 1hr free each day
-# # 1 hr free Mon-Sat, free power on Sundays
-# daily_chg = (271.0 / 100) * 1.15
-# night_chg = (23.94 / 100) * 1.15 #9pm-7am everyday
-# peak_chg = (26.59 / 100) * 1.15 #7am-9am, 5pm-9pm
-# off_peak_chg = (23.94 / 100) * 1.15 #9am-5pm
-# weekend_chg = (23.94 / 100) * 1.15 # sat/sun non-night hours
-# discount = 0
-
-# new Genesis PowerHome rates from 1 Sep 2026 => 01/07/2025 - 01/07/2026 = $3438.58
+# new Genesis PowerHome rates (weekend current meter setup) from 1 Sep 2026 => 01/07/2025 - 01/07/2026 = $3737.88
 # daily_chg = (169.30 / 100) * 1.15
-# night_chg = (16.17 / 100) * 1.15
+# night_chg = (20.51 / 100) * 1.15
 # peak_chg = (26.95 / 100) * 1.15
 # off_peak_chg = (26.95 / 100) * 1.15
 # weekend_chg = (20.51 / 100) * 1.15
+# discount = 0.0
+
+# new Genesis PowerHome rates (night pricing requiring meter config change) from 1 Sep 2026 => 01/07/2025 - 01/07/2026 = $3586.42
+# daily_chg = (169.30 / 100) * 1.15
+# night_chg = (16.31 / 100) * 1.15
+# peak_chg = (26.95 / 100) * 1.15
+# off_peak_chg = (26.95 / 100) * 1.15
+# weekend_chg = (26.95 / 100) * 1.15
 # discount = 0.0
 
 # genesis fixed 1 year energy plus standard fixed plan (no longer low user) - applies from 19th Jan 2025
@@ -175,9 +183,9 @@ if not dups.empty:
 
 # billing period to check - note billing period will end at the end of the day on the last day
 bill_start = pd.Timestamp(pd.to_datetime('30/06/2026', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
-bill_start = pd.Timestamp(pd.to_datetime('02/06/2026', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
+# bill_start = pd.Timestamp(pd.to_datetime('01/07/2025', dayfirst=True), tz='Pacific/Auckland') # first day of billing period includes usage from 23:00-24:00 on the previous day
 bill_end = pd.Timestamp(pd.to_datetime('29/07/2026', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
-bill_end = pd.Timestamp(pd.to_datetime('29/06/2026', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
+# bill_end = pd.Timestamp(pd.to_datetime('01/07/2026', dayfirst=True) + pd.Timedelta(hours=23), tz='Pacific/Auckland') # total for last hour of the billing period is at 23:00
 bill_ts = all_data.loc[bill_start:bill_end].index
 bill_days = bill_ts[-1] - bill_ts[0]
 if bill_days.components.hours == 23:
@@ -209,6 +217,7 @@ print('\t{:10.2f}  kWh weekday use (7am-9pm Mon-Fri)'.format(bill_data['weekday_
 print('\t{:10.2f}  kWh off-peak use (9am-5pm Mon-Fri)'.format(bill_data['off_peak_kWh']))
 print('\t{:10.2f}  kWh peak use (7am-9am & 5pm-9pm Mon-Fri)'.format(bill_data['peak_kWh']))
 print('\t{:10.2f}  kWh total use'.format(bill_data['usage_kWh']))
+print('\t{:10.2f}  kWh avg daily use'.format(avg_daily_use))
 print('\t{:10.2f}  NZD charged for usage'.format(bill_data['usage_charge']))
 print('\t{:10.2f}  NZD charged for metering'.format(bill_data['daily_charge']))
 print('\t{:10.2f}  NZD charged total'.format(bill_data['total_charge']))
