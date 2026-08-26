@@ -137,10 +137,10 @@ class AutoBrowser(object):
         self.wait.until(EC.invisibility_of_element_located((By.CLASS_NAME, hiding_elem_css)), msg)
         # wait for a button on the data page to load then click it
         print('Waiting for button to be clickable...')
-        msg = 'button element targeted by CSS selector={} was not clickable within {}s'.format(data_btn_css, self.timeout)
+        msg = 'button element targeted by CSS selector={} was not visible within {}s'.format(data_btn_css, self.timeout)
         if i==0:
             # only expecting 1 match, so response will just be the element
-            elem_btn_data = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, data_btn_css)), msg)
+            elem_btn_data = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, data_btn_css)), msg)
         else:
             # expecting multiple matches - wait till all visible then select particular one
             elem_btns = self.wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, data_btn_css)), msg)
@@ -150,7 +150,7 @@ class AutoBrowser(object):
         print('Clicked button {}'.format(btn_name))
 
     @error_catcher
-    def extract_data(self, toggle_btn_css, previous_btn_css, no_data_css, data_css, download_btn_css):
+    def extract_data(self, toggle_btn_css, previous_btn_css, data_css, download_btn_css):
         # first wait for the toggle button selecting days to appear
         msg = 'button element targeted by CSS selector={} was not clickable within {}s'.format(toggle_btn_css, self.timeout)
         elem_btn_toggle = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, toggle_btn_css)), msg)
@@ -159,13 +159,14 @@ class AutoBrowser(object):
         data_found = False
         while not data_found:
             try:
-                self.driver.find_element(by=By.CSS_SELECTOR, value=no_data_css)
+                # check if we have data showing
+                WebDriverWait(self.driver, 3).until(EC.visibility_of_element_located((By.CSS_SELECTOR, data_css)))
+                print('Data found! Downloading...')
+                data_found = True
+            except TimeoutException:
+                print('No data showing, navigating back 1 day...')
                 # click the back button to get data from previous day
                 self.click_button(previous_btn_css)
-            except NoSuchElementException:
-                # check if we now have data showing
-                self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, data_css)))
-                data_found = True
 
         # check if data already exists in the output folder for this day - only download new data
         cur_date = pd.to_datetime(elem_btn_toggle.text)
@@ -174,11 +175,11 @@ class AutoBrowser(object):
             # now to download data for the current day
             self.click_button(download_btn_css)
             print('Downloaded data for {:%Y-%m-%d}'.format(cur_date))
+            # then navigate back 1 day
+            print('Navigating back 1 day...')
+            self.click_button(previous_btn_css)
         else:
             print('Skipped downloading data for {:%Y-%m-%d}'.format(cur_date))
-
-        # then navigate back 1 day
-        self.click_button(previous_btn_css)
 
         return cur_date
 
@@ -201,18 +202,16 @@ for f in os.listdir(browser.outputs_dir):
             if f_date > stop_date:
                 stop_date = f_date
 # do login
-browser.login(continue_btn_id='continue', login_btn_id='next', username_fld_id='email', password_fld_id='password', load_invisible_id='loader', success_visible_cls='account-switcher-button-name', success_invisible_cls='loading-portal')
+browser.login(continue_btn_id='continue', login_btn_id='next', username_fld_id='email', password_fld_id='password', load_invisible_id='loader', success_visible_cls='button-for-dropdown', success_invisible_cls='app-root loading')
 # navigate to usage page
 print('Navigating to usage page...')
-browser.click_button('button.header-tabs-top-link', hiding_elem_css='initialize-loader finished-loader', i=0)
-browser.click_button('a[href="/account/products/consumption"]', hiding_elem_css='loading-portal')
-# click the 3rd match for the button class, which is the hourly data button
-browser.click_button('button.electricity-historical-tabs', hiding_elem_css='loading-portal', i=2)
+browser.click_button('button[aria-label="View Recent Usage details"]', hiding_elem_css='ShellContent-Loader', i=0)
+browser.click_button('input[value="HOURLY"]', hiding_elem_css='ShellContent-Loader')
 # extract data
 # use line below to manually specify stop date
 # stop_date = pd.to_datetime('2023-03-05')
 while cur_date > stop_date:
-    cur_date = browser.extract_data(toggle_btn_css='button.toggle', previous_btn_css='button.previous', no_data_css='div.error-text', data_css='div.chart-container.HOURLY.electricity-chart', download_btn_css='button.download-usage-excel')
+    cur_date = browser.extract_data(toggle_btn_css=r'button#\:r3\:-toggle-button', previous_btn_css='button[aria-label="Previous period"]', data_css='div.HOURLY.electricity-chart g.recharts-layer.recharts-bar-rectangle path', download_btn_css='div.electricity-historical a[href="#"]')
 
 # finish
 browser.driver.quit()
